@@ -16,6 +16,7 @@ from jose import jwt, JWTError
 from app.core.config import JWT_SECRET, JWT_ALGORITHM
 from app.models.user import User
 from sqlalchemy import select
+import os
 
 
 app = FastAPI(title = APP_NAME)
@@ -142,7 +143,8 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: int):
 
 @app.on_event("startup")
 async def on_startup():
-    await init_db()
+    if os.getenv("ENV") != "test":
+        await init_db()
 
 @app.get("/")
 def health_check():
