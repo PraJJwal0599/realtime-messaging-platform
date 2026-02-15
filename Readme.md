@@ -137,13 +137,46 @@ In a multi instance deployment, the WebSocket layer could be extended using a me
 🔎 Production Readiness
 
 The architecture supports:
-	•	Centralized logging
-	•	Structured error handling
-	•	Modular route organization
+	•	Modular backend structure
+	•	Environment aware initialization
 	•	Testable API endpoints
+	•	CI based validation pipeline
 	•	Containerized deployment
 
 ⸻
+
+🧪 Testing
+
+Tests are implemented using pytest and httpx with ASGI transport.
+
+Run locally:
+cd Backend
+python -m pytest
+
+A GitHub Actions workflow automatically runs tests on every push to main.
+
+🔄 Continuous Integration
+
+This repository includes a GitHub Actions pipeline that:
+	•	Runs on every push and pull request
+	•	Installs dependencies in a clean environment
+	•	Executes the test suite
+
+This ensures application integrity and reproducibility across environments.
+
+🐳 Docker Support
+
+The backend is containerized for reproducible deployment.
+
+Build the Image:
+cd Backend
+docker build -t rtm_backend .
+
+Run the Container:
+docker run -p 8000:8000 rtm_backend
+
+Then open:
+http://127.0.0.1:8000
 
 🛠️ Running Locally
 
@@ -155,6 +188,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 
-Frontend
+Backend runs at
+http://127.0.0.1:8000
 
-Serve chat.html using a static server (e.g., Live Server).
+Frontend
+cd Frontend
+python - m http.server 5500
+
+Then open:
+http://localhost:5000
+
+Serve chat.html using a static server (e.g., Live Server)
+
