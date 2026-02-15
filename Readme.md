@@ -37,6 +37,10 @@ PostgreSQL
 v
 Real-Time Broadcast per Conversation
 
+### Architecture Diagram
+
+![Architecture Diagram](architecture.png)
+
 
 ## 🔐 Authentication
 
