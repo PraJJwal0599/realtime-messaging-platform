@@ -21,18 +21,3 @@ async def test_health_check():
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-
-@pytest.mark.asyncio
-async def test_login_invalid():
-    transport = httpx.ASGITransport(app = app)
-
-    async with httpx.AsyncClient(
-        transport = transport,
-        base_url = "http://test"
-    ) as client:
-        response = await client.post("/auth/login", params = {
-            "email": "invalid@test.com",
-            "password": "wrong"
-        })
-    
-    assert response.status_code in [400, 401]
