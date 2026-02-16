@@ -4,9 +4,6 @@ from app.models.user import User
 from app.models.conversation import Conversation
 from app.models.conversation_participant import ConversationParticipant
 from app.models.message import Message
-import os
-
-print("DATABASE_URL =", os.getenv("DATABASE_URL"))
 
 async def init_db():
     if engine is None:
