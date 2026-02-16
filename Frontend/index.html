@@ -2,20 +2,31 @@
 <html>
 
 <head>
-    <title>Messaging App - Login</title>
+    <title>Login</title>
     <link rel = "stylesheet" href = "style.css">
 </head>
 
-<body>
-    <h2>Login</h2>
+<body class = "auth-body">
 
-    <input id = "email" placeholder = "Email" />
-    <input id = "password" type = "password" placeholder = "Password" />
-    <button onclick = "login()" > Login</button>
+<div class = "auth-container">
+    <div class = "auth-card">
+        <h2>Welcome back</h2>
 
-    <p id = "error"></p>
+        <input type = "email" id = "email" placeholder = "Email" />
+        <input type = "password" id = "password" type = "password" placeholder = "Password" />
+        
+        <button onclick = "login()" > Login</button>
+        
+        <p class = "auth-switch">
+            Don't have an account?
+            <a href="signup.html">Sign up</a>
+        </p>
 
-    <script src = "app.js"></script>
+        <p id = "error" class = "error"></p>
+    </div>
+</div>
+
+<script src = "app.js"></script>
 </body>        
 
 </html>    

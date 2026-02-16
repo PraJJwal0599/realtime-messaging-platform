@@ -1,6 +1,11 @@
 THIS_IS_THE_REAL_FILE = true;
 console.log("APP JS VERSION 2");
 let socket = null
+let currentConversationId = null;
+let oldestMessageId = null;
+let isLoadingOlder = false;
+let lastRenderedDate = null;
+
 const API_URL = "http://127.0.0.1:8000";
 
 function scrollToBottomIfNear(box) {
@@ -71,20 +76,52 @@ async function loadChats() {
 
     chats.forEach (chat => {
         const li = document.createElement("li");
-        li.innerText = `${chat.other_user.username} (${chat.unread_count})`;
-        li.onclick = () => openChat(chat.conversation_id);
+        li.innerHTML = `
+            <div style="font-weight: bold;">${chat.other_user.display_name}</div>
+            <div style="font-size: 12px; opacity: 0.7;">@${chat.other_user.username}</div>
+            <div style="font-size: 12px; color: green;">Unread: ${chat.unread_count}</div>
+        `;
+        li.onclick = () => openChat(chat.conversation_id, chat.other_user);
         list.appendChild(li);
     });
 }
 
 if (window.location.pathname.includes("chat.html")) {
+    showEmptyState();
     loadChats();
 }
 
-let currentConversationId = null;
 
-async function openChat(conversationId) {
-    console.log("Open chat called");
+async function openChat(conversationId, otherUser) {
+
+    const chatArea = document.querySelector(".chat-area");
+
+    if (window.innerWidth <= 768) {
+        document.querySelector(".chat-area").classList.add("active");
+    }
+
+    const header = document.getElementById("chatHeader");
+
+    if (header && otherUser) {
+        header.innerHTML = `
+        <span id="backButton" style="cursor:pointer; margin-right:10px;"><-</span>
+        ${otherUser.display_name}
+        `;
+
+        const backButton = document.getElementById("backButton");
+
+        if (backButton) {
+            backButton.onclick = function(event) {
+                event.stopPropagation();
+                goBack();
+            }
+        }
+
+        header.onclick = function() {
+            openModal("User Info", `Username: @${otherUser.username}`);
+        };
+    }
+    
     currentConversationId = conversationId;
     const token = localStorage.getItem("token");
 
@@ -102,8 +139,33 @@ async function openChat(conversationId) {
     const box = document.getElementById("messages");
     box.innerHTML = "";
 
+    oldestMessageId = null;
+
     const currentUserId = parseInt(localStorage.getItem("user_id"));
-    messages.forEach(msg => {
+    lastRenderedDate = null;
+
+    messages.reverse().forEach(msg => {
+
+        if (!oldestMessageId || msg.message_id < oldestMessageId) {
+                oldestMessageId = msg.message_id;
+            }
+
+        const messageDate = new Date(msg.created_at);
+        const formattedDate = messageDate.toDateString();
+
+        if (formattedDate !== lastRenderedDate) {
+            const dateDivider = document.createElement("div");
+            dateDivider.classList.add("date-divider");
+            dateDivider.innerText = messageDate.toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+
+            box.appendChild(dateDivider);
+            lastRenderedDate = formattedDate;
+        }
+
         const div = document.createElement("div");
         div.classList.add("message");
 
@@ -113,29 +175,38 @@ async function openChat(conversationId) {
             div.classList.add("other-message");
         }
 
-        const time = new Date(msg.created_at).toLocaleTimeString([], {
+        const time = new Date(msg.created_at);
+        const formattedTime = time.toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit"
         });
 
         div.innerHTML = `
-            <div>${msg.content_at}</div>
-            <div style="font-size:10px;opacity:0.7;margin-top:4px">${time}</div>
+            <div>${msg.content_at || msg.content}</div>
+            <div class="timestamp">${formattedTime}</div>
         `;
 
         box.appendChild(div);
-
-        box.scrollTop = box.scrollHeight;
-        const input = document.getElementById("messageInput");
-
-        input.oninput = function() {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    type: "typing"
-                }));
-            }
-        };
     });
+
+    box.scrollTop = box.scrollHeight;
+
+    box.onscroll = async function () {
+        if (box.scrollTop === 5 && oldestMessageId) {
+            await loadOlderMessages(oldestMessageId);
+        }
+    };
+
+    box.scrollTop = box.scrollHeight;
+    const input = document.getElementById("messageInput");
+
+    input.oninput = function() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                type: "typing"
+            }));
+        }
+    };
 
     loadChats();
 
@@ -175,14 +246,15 @@ async function openChat(conversationId) {
                 div.classList.add("other-message");
             }
 
-            const time = new Date(msg.created_at).toLocaleTimeString([], {
+            const time = new Date(msg.created_at);
+            const formattedTime = time.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit"
             });
 
             div.innerHTML = `
-                <div>${msg.content}</div>
-                <div style="font-size:10px;opacity:0.7;margin-top:4px">${time}</div>
+                <div>${msg.content_at || msg.content}</div>
+                <div class = "timestamp">${formattedTime}</div>
             `;
 
             box.appendChild(div);
@@ -190,6 +262,81 @@ async function openChat(conversationId) {
             scrollToBottomIfNear(box);
         }    
     };
+}
+
+async function loadOlderMessages(beforeId) {
+
+    if (isLoadingOlder) return;
+    isLoadingOlder = true;
+
+    const token = localStorage.getItem("token");
+    const box = document.getElementById("messages");
+
+    const previousHeight = box.scrollHeight;
+
+    const res = await fetch(
+        `${API_URL}/messages/${currentConversationId}?before=${beforeId}&limit=20`,
+        {
+            headers: { "Authorization": `Bearer ${token}` }
+        }
+    );
+
+    const olderMessages = await res.json();
+
+    if (!olderMessages.length) {
+        isLoadingOlder = false;
+        return;
+    }
+
+    olderMessages.reverse().forEach(msg => {
+
+        const messageDate = new Date(msg.created_at);
+        const formattedDate = messageDate.toDateString();
+
+        if (formattedDate !== lastRenderedDate) {
+            const dateDivider = document.createElement("div");
+            dateDivider.classList.add("date-divider");
+            dateDivider.innerText = messageDate.toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+
+            box.prepend(dateDivider);
+            lastRenderedDate = formattedDate;
+        }
+
+        const div = document.createElement("div");
+        div.classList.add("message");
+
+        const currentUserId = parseInt(localStorage.getItem("user_id"));
+
+        if (msg.sender_id === currentUserId) {
+            div.classList.add("my-message");
+        } else {
+            div.classList.add("other-message");
+        }
+
+        const time = new Date(msg.created_at);
+        const formattedTime = time.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+
+        div.innerHTML = `
+            <div>${msg.content_at || msg.content}</div>
+            <div class="timestamp">${formattedTime}</div>
+        `;
+
+        box.prepend(div);
+    });
+
+    oldestMessageId = olderMessages[olderMessages.length - 1].message_id;
+
+    const newHeight = box.scrollHeight;
+    box.scrollTop = newHeight - previousHeight;
+
+    isLoadingOlder = false;
 }
 
 async function sendMessage() {
@@ -251,9 +398,163 @@ function showTypingIndicator() {
     // Scroll to bottom to make it visible
     box.scrollTop = box.scrollHeight;
 
+    box.onscroll = async function() {
+        if (box.scrollTop === 0 && oldestMessageId) {
+            await loadOlderMessages(oldestMessageId);
+        }
+    }
+
     clearTimeout(typingDiv._timeout);
 
     typingDiv._timeout = setTimeout(() => {
         typingDiv.remove();
     }, 1500);
+}
+
+async function signup() {
+    const email = document.getElementById("signupEmail").value;
+    const username = document.getElementById("signupUsername").value;
+    const displayName = document.getElementById("signupDisplayName").value;
+    const password = document.getElementById("signupPassword").value;
+
+    const res = await fetch(`${API_URL}/auth/signup`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email: email,
+            username: username,
+            display_name: displayName,
+            password: password
+        })
+    });
+
+    if (!res.ok) {
+        document.getElementById("signupError").innerText =
+            "Signup failed. Email may already exist.";
+        return;
+    }
+
+    // Auto-login after successful signup
+    const loginRes = await fetch(
+        `${API_URL}/auth/login?email=${email}&password=${password}`,
+        { method: "POST" }
+    );
+
+    if (!loginRes.ok) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    const loginData = await loginRes.json();
+    localStorage.setItem("token", loginData.access_token);
+
+    const meRes = await fetch(`${API_URL}/auth/me`, {
+        headers: {
+            "Authorization": `Bearer ${loginData.access_token}`
+        }
+    });
+
+    if (meRes.ok) {
+        const meData = await meRes.json();
+        localStorage.setItem("user_id", meData.id);
+    }
+
+    window.location.href = "index.html";
+}
+
+async function startNewChat() {
+    const token = localStorage.getItem("token");
+    const username = document.getElementById("newChatUsername").value;
+
+    if (!username) {
+        alert("Enter a username");
+        return;
+    }
+
+    const confirmStart = confirm(`Start conversation with ${username}?`);
+    if (!confirmStart) return;
+
+    const res = await fetch(
+        `${API_URL}/conversations/direct/${username}`,
+        {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        }
+    );
+
+    if (!res.ok) {
+        alert("User not found or cannot start chat.");
+        return;
+    }
+
+    const data = await res.json();
+
+    loadChats();
+    openChat(data.conversation_id);
+
+    document.getElementById("newChatUsername").value = "";
+}
+
+function showEmptyState() {
+    if (socket) {
+        socket.close();
+        socket = null;
+    }
+
+    currentConversationId = null;
+
+    const header = document.getElementById("chatHeader");
+    const box = document.getElementById("messages");
+
+    if (header) header.innerHTML = "";
+    if (box) {
+        box.innerHTML = `
+            <div style="
+                margin: auto;
+                text-align: center;
+                opacity: 0.6;
+                font-size: 18px;
+            ">
+                Select a conversation to start chatting
+            </div>
+        `;
+    }
+}
+
+function goBack() {
+    if (socket) {
+        socket.close();
+        socket = null;
+    }
+
+    currentConversationId = null;
+    showEmptyState();
+
+    if (window.innerWidth <= 768) {
+        document.querySelector(".chat-area").classList.remove("active");
+    }
+}
+
+function toggleStartChat() {
+    const box = document.getElementById("startChatBox");
+
+    if (box.classList.contains("hidden")) {
+        box.classList.remove("hidden");
+    } else {
+        box.classList.add("hidden");
+    }
+}
+
+function openModal(title, content) {
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalContent").innerText = content;
+    document.getElementById("modalOverlay").classList.remove("hidden");
+}
+
+function closeModal() {
+    document.getElementById("modalOverlay").classList.add("hidden");
 }

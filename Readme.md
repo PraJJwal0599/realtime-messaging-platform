@@ -193,7 +193,7 @@ http://127.0.0.1:8000
 
 Frontend
 cd Frontend
-python - m http.server 5500
+python -m http.server 5500
 
 Then open:
 http://localhost:5000

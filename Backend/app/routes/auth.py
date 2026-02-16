@@ -7,6 +7,7 @@ from app.core.security import verify_password
 from app.core.auth_utils import create_access_token
 from fastapi import Depends
 from app.core.auth_dependencies import get_current_user
+from app.schemas.user import UserSignup
 
 
 router = APIRouter(prefix = "/auth", tags = ["auth"])
@@ -20,10 +21,10 @@ async def me(current_user = Depends(get_current_user)):
     }
 
 @router.post("/signup")
-async def signup(email: str, username: str, display_name: str,password: str):
+async def signup(user_data: UserSignup):
     async with AsyncSessionLocal() as session:
         result = await session.execute(
-            select(User).where(User.email == email)
+            select(User).where(User.email == user_data.email)
         )
 
         if result.scalar_one_or_none():
@@ -31,16 +32,13 @@ async def signup(email: str, username: str, display_name: str,password: str):
                 status_code = 400,
                 detail = "Email already registered"
             )
-        
-        print("PASSWORD VALUE:", password)
-        print("PASSWORD LENGTH:", len(password.encode("utf-8")))
 
-        hashed_password = hash_password(password)
+        hashed_password = hash_password(user_data.password)
 
         user = User(
-            email = email,
-            username = username,
-            display_name = display_name,
+            email = user_data.email,
+            username = user_data.username,
+            display_name = user_data.display_name,
             password_hash = hashed_password
         )
 

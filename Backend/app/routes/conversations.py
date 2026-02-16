@@ -26,13 +26,13 @@ async def create_or_get_direct_conversation(
         if not target_user:
             raise HTTPException(
                 status_code = status.HTTP_404_NOT_FOUND,
-                details = "User not found",
+                detail = "User not found",
             )
         
         if target_user.id == current_user.id:
             raise HTTPException(
                 status_code = status.HTTP_400_BAD_REQUEST,
-                details = "Cannot start a converstion with yourself",
+                detail = "Cannot start a converstion with yourself",
             )
         
         stmt = (

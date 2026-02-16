@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class = "auth-body">
+
+<div class="auth-container">
+    <div class = "auth-card">
+        <h2>Create Account</h2>
+
+        <input type="text" id="signupDisplayName" placeholder="Display Name" />
+        <input type="text" id="signupUsername" placeholder="Username" />
+        <input type="email" id="signupEmail" placeholder="Email" />
+        <input type="password" id="signupPassword" placeholder="Password" />
+
+        <button onclick="signup()">Sign Up</button>
+
+        <p class = "auth-switch">
+            Already have an account?
+            <a href = "index.html">Login</a>
+        </p>
+
+        <p id = "signup_error" class = "error"></p>
+    
+    </div>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
