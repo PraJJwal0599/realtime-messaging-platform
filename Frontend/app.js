@@ -1,5 +1,3 @@
-THIS_IS_THE_REAL_FILE = true;
-console.log("APP JS VERSION 2");
 let socket = null
 let currentConversationId = null;
 let oldestMessageId = null;
@@ -7,9 +5,10 @@ let isLoadingOlder = false;
 let lastRenderedDate = null;
 
 const API_URL = "https://realtime-messaging-backend.onrender.com";
+//const API_URL = "http://127.0.0.1:8000";
 
 function scrollToBottomIfNear(box) {
-    const threshold = 80; // pixels from bottom
+    const threshold = 80; 
 
     const isNearBottom =
         box.scrollHeight - box.scrollTop - box.clientHeight < threshold;
@@ -44,7 +43,7 @@ async function login(){
             headers: {
                 "Authorization": `Bearer ${data.access_token}`
             }
-        });
+        });   
 
         if (meRes.ok) {
             const meData = await meRes.json();
@@ -59,7 +58,6 @@ async function login(){
 }
 
 async function loadChats() {
-    console.log("Works loadchat");
     const token = localStorage.getItem("token");
 
     const res = await fetch(`${API_URL}/conversations/`,{
@@ -139,12 +137,14 @@ async function openChat(conversationId, otherUser) {
     const box = document.getElementById("messages");
     box.innerHTML = "";
 
+    console.log(messages.map(m => m.created_at));
+
     oldestMessageId = null;
 
     const currentUserId = parseInt(localStorage.getItem("user_id"));
     lastRenderedDate = null;
 
-    messages.reverse().forEach(msg => {
+    messages.forEach(msg => {
 
         if (!oldestMessageId || msg.message_id < oldestMessageId) {
                 oldestMessageId = msg.message_id;
@@ -191,11 +191,16 @@ async function openChat(conversationId, otherUser) {
 
     box.scrollTop = box.scrollHeight;
 
-    box.onscroll = async function () {
-        if (box.scrollTop === 5 && oldestMessageId) {
-            await loadOlderMessages(oldestMessageId);
+    box.addEventListener("scroll", () => {
+
+        if (
+            box.scrollTop <= 80 &&
+            oldestMessageId &&
+            !isLoadingOlder
+        ) {
+            loadOlderMessages(oldestMessageId);
         }
-    };
+    });
 
     box.scrollTop = box.scrollHeight;
     const input = document.getElementById("messageInput");
@@ -288,26 +293,45 @@ async function loadOlderMessages(beforeId) {
         return;
     }
 
-    olderMessages.reverse().forEach(msg => {
+    const fragment = document.createDocumentFragment();
+
+    
+    const firstElement = box.firstElementChild;
+    let topDate = null;
+
+    if (firstElement) {
+        if (firstElement.classList.contains("date-divider")) {
+            topDate = firstElement.innerText;
+        } else if (firstElement.classList.contains("message")) {
+            topDate = firstElement.dataset.readableDate;
+        }
+    }
+
+    olderMessages.forEach(msg => {
 
         const messageDate = new Date(msg.created_at);
-        const formattedDate = messageDate.toDateString();
 
-        if (formattedDate !== lastRenderedDate) {
+        const readableDate = messageDate.toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+
+        
+        if (readableDate !== topDate) {
             const dateDivider = document.createElement("div");
             dateDivider.classList.add("date-divider");
-            dateDivider.innerText = messageDate.toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-            });
+            dateDivider.innerText = readableDate;
 
-            box.prepend(dateDivider);
-            lastRenderedDate = formattedDate;
+            fragment.appendChild(dateDivider);
+            topDate = readableDate;
         }
 
         const div = document.createElement("div");
         div.classList.add("message");
+
+        
+        div.dataset.readableDate = readableDate;
 
         const currentUserId = parseInt(localStorage.getItem("user_id"));
 
@@ -317,8 +341,7 @@ async function loadOlderMessages(beforeId) {
             div.classList.add("other-message");
         }
 
-        const time = new Date(msg.created_at);
-        const formattedTime = time.toLocaleTimeString([], {
+        const formattedTime = messageDate.toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit"
         });
@@ -328,13 +351,15 @@ async function loadOlderMessages(beforeId) {
             <div class="timestamp">${formattedTime}</div>
         `;
 
-        box.prepend(div);
+        fragment.appendChild(div);
     });
 
-    oldestMessageId = olderMessages[olderMessages.length - 1].message_id;
+    box.prepend(fragment);
+
+    oldestMessageId = olderMessages[0].message_id;
 
     const newHeight = box.scrollHeight;
-    box.scrollTop = newHeight - previousHeight;
+    box.scrollTop = box.scrollTop + (newHeight - previousHeight);
 
     isLoadingOlder = false;
 }

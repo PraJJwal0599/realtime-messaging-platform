@@ -24,10 +24,13 @@ app = FastAPI(title = APP_NAME)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:8000",
+        "http://localhost:5500",
         "http://127.0.0.1:5500",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "https://brewverse.vercel.app"
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://brewverse\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
