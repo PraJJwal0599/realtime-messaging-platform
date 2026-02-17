@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-    
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,6 +49,37 @@
             <button onclick = "closeModal()">Close</button>
         </div>
     </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (window.visualViewport) {
+            const chatArea = document.querySelector('.chat-area');
+
+            function adjustHeight() {
+                chatArea.style.height = window.visualViewport.height + "px";
+            }
+
+            window.visualViewport.addEventListener('resize', adjustHeight);
+            window.visualViewport.addEventListener('scroll', adjustHeight);
+
+            adjustHeight();
+        }
+
+        const inputBar = document.getElementById("messageInput");
+
+        if (inputBar) { 
+            inputBar.addEventListener('focus', () => {
+                setTimeout(() => {
+                    const messages = document.getElementById("messages");
+                    if (messages) {
+                        messages.scrollTop = messages.scrollHeight;
+                    }
+                }, 300);
+            });
+        }
+    });
+    </script>
+
 </body>        
 
 </html>    
