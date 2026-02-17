@@ -6,7 +6,7 @@ let oldestMessageId = null;
 let isLoadingOlder = false;
 let lastRenderedDate = null;
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://realtime-messaging-backend.onrender.com";
 
 function scrollToBottomIfNear(box) {
     const threshold = 80; // pixels from bottom
@@ -214,7 +214,7 @@ async function openChat(conversationId, otherUser) {
         socket.close();
     }
 
-    socket = new WebSocket(`ws://127.0.0.1:8000/ws/${conversationId}?token=${token}`);
+    socket = new WebSocket(`wss://realtime-messaging-backend.onrender.com/ws/${conversationId}?token=${token}`);
 
     socket.onopen = function() {
         console.log("WebSocket connected for conversation", conversationId);
