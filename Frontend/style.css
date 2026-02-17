@@ -22,6 +22,7 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    overscroll-behavior: none;
 }
 
 body {
@@ -99,7 +100,7 @@ body {
     border: 1px solid #ddd;
     opacity: 0.6;
     min-width: 0;
-    font-size: 13px;
+    font-size: 16px;
 }
 
 .input-area input:focus {
