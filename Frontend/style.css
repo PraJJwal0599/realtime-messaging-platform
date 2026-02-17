@@ -21,7 +21,6 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
     width: 100%;
     overscroll-behavior: none;
 }
@@ -85,6 +84,7 @@ body {
 .messages {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -101,6 +101,7 @@ body {
     position: sticky;
     bottom: 0;
     z-index: 5;
+    flex-shrink: 0;
 }
 
 .input-area input {
