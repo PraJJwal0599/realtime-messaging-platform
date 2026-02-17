@@ -18,9 +18,10 @@
 }
 
 html, body {
+    height: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 body {
@@ -338,13 +339,19 @@ body {
 
 @media (max-width: 768px) {
 
+    body {
+        overflow: hidden;
+    }
+
     .container {
         flex-direction: column;
         width: 100%;
         margin: 0;
         box-shadow: none;
         max-width: 100%;
-        overflow: visible;
+        height: 100vh;
+        overflow: hidden;
+        border-radius: 0;
     }
 
     .sidebar {
@@ -356,6 +363,8 @@ body {
     }
 
     .chat-area {
+        display: flex;
+        flex-direction: column;
         position: fixed;
         top: 0;
         left: 100%;
@@ -363,11 +372,22 @@ body {
         height: 100vh;
         background: white;
         transition: left 0.3s ease;
-        z-index: 10;
+        z-index: 20;
+        overflow: hidden;
     }
 
     .chat-area.active {
         left: 0;
+    }
+
+    .messages {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .input-area {
+        flex-shrink: 0;
     }
 }
 
