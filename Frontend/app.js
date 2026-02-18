@@ -3,6 +3,7 @@ let currentConversationId = null;
 let oldestMessageId = null;
 let isLoadingOlder = false;
 let lastRenderedDate = null;
+let activeConversationId = null;
 
 const API_URL = "https://realtime-messaging-backend.onrender.com";
 //const API_URL = "http://127.0.0.1:8000";
@@ -74,10 +75,13 @@ async function loadChats() {
 
     chats.forEach (chat => {
         const li = document.createElement("li");
+
+        li.dataset.conversationId = caht.conversation_id;
+
         li.innerHTML = `
             <div style="font-weight: bold;">${chat.other_user.display_name}</div>
             <div style="font-size: 12px; opacity: 0.7;">@${chat.other_user.username}</div>
-            <div style="font-size: 12px; color: green;">Unread: ${chat.unread_count}</div>
+            <div class = "unread-count" style="font-size: 12px; color: green;">Unread: ${chat.unread_count || 0}</div>
         `;
         li.onclick = () => openChat(chat.conversation_id, chat.other_user);
         list.appendChild(li);
@@ -91,6 +95,8 @@ if (window.location.pathname.includes("chat.html")) {
 
 
 async function openChat(conversationId, otherUser) {
+
+    activeConversationId = conversationId;
 
     const chatArea = document.querySelector(".chat-area");
 
@@ -242,31 +248,40 @@ async function openChat(conversationId, otherUser) {
         }
 
         if (msg.type === "message"){
-            const div = document.createElement("div");
-            div.classList.add("message");
 
-            if (msg.sender_id === currentUserId) {
-                div.classList.add("my-message");
-            } else {
+            if (conversationId == activeConversationId) {
+
+                const div = document.createElement("div");
+                div.classList.add("message");
+
+                if (msg.sender_id === currentUserId) {
+                    div.classList.add("my-message");
+                } else {
                 div.classList.add("other-message");
-            }
+                }
 
-            const time = new Date(msg.created_at);
-            const formattedTime = time.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit"
-            });
+                const time = new Date(msg.created_at);
+                const formattedTime = time.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
 
-            div.innerHTML = `
-                <div>${msg.content_at || msg.content}</div>
-                <div class = "timestamp">${formattedTime}</div>
-            `;
+                div.innerHTML = `
+                    <div>${msg.content_at || msg.content}</div>
+                    <div class = "timestamp">${formattedTime}</div>
+                `;
 
-            box.appendChild(div);
+                box.appendChild(div);
 
-            scrollToBottomIfNear(box);
-        }    
-    };
+                scrollToBottomIfNear(box);
+            } else {
+                incrementUnread(msg.conversation_id);
+
+                showBrewToast("New message received 👀")
+                triggerBrowserNotification("New message on Brewverse 🍻");
+            }  
+        };
+    }
 }
 
 async function loadOlderMessages(beforeId) {
@@ -625,4 +640,69 @@ document.addEventListener("DOMContentLoaded", function () {
             }, 300);
         });
     }
+});
+
+function showBrewToast(text) {
+    const toast = document.getElementById("brewToast");
+    if (!toast) return;
+
+    toast.innerText = text;
+    toast.classList.add("show");
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+    }, 3000);
+}
+
+let originalTitle = document.title;
+
+function flashTitle() {
+    if (!document.hidden) return;
+
+    const interval = setInterval(() => {
+        document.title = document.title === originalTitle
+            ? "🔔 New Message - Brewverse"
+            : originalTitle;
+    }, 1000);
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            clearInterval(interval);
+            document.title = originalTitle;
+        }
+    }, { once: true });
+}
+
+function incrementUnread(conversationId) {
+    const chatItem = document.querySelector(
+        `[data-conversation-id="${conversationId}"]`
+    );
+
+    if (!chatItem) return;
+
+    const unreadE1 = chatItem.querySelector(".unread-count");
+
+    if (!unreadE1) return;
+
+    let current = parseInt(unreadEl.innerText || "0");
+    unreadEl.innerText = current + 1;
+}
+
+function triggerBrowserNotification(text) {
+    if (!("Notification" in window)) return;
+
+    if (Notification.permission === "granted") {
+        new Notification("Brewverse", {
+            body: text,
+            icon: "/favicon.ico"
+        });
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+
 });

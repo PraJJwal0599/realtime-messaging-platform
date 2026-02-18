@@ -409,6 +409,17 @@ body {
     .input-area {
         flex-shrink: 0;
     }
+
+    .brew-toast {
+        left: 50%;
+        transform: translate(-50%, 20px);
+        bottom: 120px;
+        right: auto;
+    }
+
+    .brew-toast.show {
+        transform: translate(-50%, 0);
+    }
 }
 
 .timestamp {
@@ -484,3 +495,27 @@ body {
 .date-divider::after {
     right: 0;
 }
+
+.brew-toast {
+    position: fixed;
+    right: 20px;
+    bottom: 90px;
+    max-width: 280px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #a78bfa, #f472b6);
+    color: #2a2440;
+    font-weight: 500;
+    box-shadow: 0 15px 40px rgba(100, 80, 200, 0.25);
+    backdrop-filter: blur(10px);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 9999;
+}
+
+.brew-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
