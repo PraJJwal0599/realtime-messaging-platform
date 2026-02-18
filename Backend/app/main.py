@@ -30,7 +30,6 @@ app.add_middleware(
         "http://127.0.0.1:8000",
         "https://brewverse.vercel.app"
     ],
-    allow_origin_regex=r"https://brewverse\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

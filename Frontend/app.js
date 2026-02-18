@@ -456,8 +456,23 @@ async function signup() {
     });
 
     if (!res.ok) {
-        document.getElementById("signupError").innerText =
-            "Signup failed. Email may already exist.";
+        const errorBox = document.getElementById("signupError");
+
+        let errorMessage = "Signup failed.";
+
+        try {
+            const data = await res.json();
+            if (data.detail) {
+                errorMessage = data.detail;
+            }
+        } catch (e) {
+        
+        }
+
+        if (errorBox) {
+            errorBox.innerText = errorMessage;
+        }
+
         return;
     }
 
