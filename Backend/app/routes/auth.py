@@ -42,7 +42,7 @@ async def signup(user_data: UserSignup):
         )
         if result.scalar_one_or_none():
             raise HTTPException(
-                status_code =4 00,
+                status_code =400,
                 detail = "Username already taken"
             )
 
