@@ -598,3 +598,33 @@ function openModal(title, content) {
 function closeModal() {
     document.getElementById("modalOverlay").classList.add("hidden");
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    const chatArea = document.querySelector(".chat-area");
+
+    if (!chatArea) return;
+
+    if (window.visualViewport) {
+        function resizeHandler() {
+            chatArea.style.height = window.visualViewport.height + "px";
+        }
+
+        window.visualViewport.addEventListener("resize", resizeHandler);
+        window.visualViewport.addEventListener("scroll", resizeHandler);
+
+        resizeHandler();
+    }
+
+    const inputBar = document.getElementById("messageInput");
+
+    if (inputBar) {
+        inputBar.addEventListener("focus", () => {
+            setTimeout(() => {
+                const messages = document.getElementById("messages");
+                if (messages) {
+                    messages.scrollTop = messages.scrollHeight;
+                }
+            }, 300);
+        });
+    }
+});
