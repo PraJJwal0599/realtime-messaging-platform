@@ -76,7 +76,7 @@ async function loadChats() {
     chats.forEach (chat => {
         const li = document.createElement("li");
 
-        li.dataset.conversationId = caht.conversation_id;
+        li.dataset.conversationId = chat.conversation_id;
 
         li.innerHTML = `
             <div style="font-weight: bold;">${chat.other_user.display_name}</div>
