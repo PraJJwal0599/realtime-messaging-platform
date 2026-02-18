@@ -601,22 +601,20 @@ function closeModal() {
 
 document.addEventListener("DOMContentLoaded", function () {
     const chatArea = document.querySelector(".chat-area");
-
     if (!chatArea) return;
 
-    if (window.visualViewport) {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    if (window.visualViewport && !isIOS) {
         function resizeHandler() {
             chatArea.style.height = window.visualViewport.height + "px";
         }
 
         window.visualViewport.addEventListener("resize", resizeHandler);
-        window.visualViewport.addEventListener("scroll", resizeHandler);
-
         resizeHandler();
     }
 
     const inputBar = document.getElementById("messageInput");
-
     if (inputBar) {
         inputBar.addEventListener("focus", () => {
             setTimeout(() => {
