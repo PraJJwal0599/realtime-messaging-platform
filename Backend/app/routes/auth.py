@@ -8,6 +8,8 @@ from app.core.auth_utils import create_access_token
 from fastapi import Depends
 from app.core.auth_dependencies import get_current_user
 from app.schemas.user import UserSignup
+from sqlalchemy.exc import IntegrityError
+
 
 
 router = APIRouter(prefix = "/auth", tags = ["auth"])
@@ -23,14 +25,25 @@ async def me(current_user = Depends(get_current_user)):
 @router.post("/signup")
 async def signup(user_data: UserSignup):
     async with AsyncSessionLocal() as session:
+
+        
         result = await session.execute(
             select(User).where(User.email == user_data.email)
         )
-
         if result.scalar_one_or_none():
             raise HTTPException(
                 status_code = 400,
                 detail = "Email already registered"
+            )
+
+        
+        result = await session.execute(
+            select(User).where(User.username == user_data.username)
+        )
+        if result.scalar_one_or_none():
+            raise HTTPException(
+                status_code =4 00,
+                detail = "Username already taken"
             )
 
         hashed_password = hash_password(user_data.password)
@@ -43,9 +56,17 @@ async def signup(user_data: UserSignup):
         )
 
         session.add(user)
-        await session.commit()
 
-        return {"message" : "User created successfully"}
+        try:
+            await session.commit()
+        except IntegrityError:
+            await session.rollback()
+            raise HTTPException(
+                status_code = 400,
+                detail = "Email or username already exists"
+            )
+
+        return {"message": "User created successfully"}
     
 
 @router.post("/login")
