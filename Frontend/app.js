@@ -583,17 +583,3 @@ function openModal(title, content) {
 function closeModal() {
     document.getElementById("modalOverlay").classList.add("hidden");
 }
-
-function adjustForKeyboard() {
-    if (window.visualViewport) {
-        const app = document.querySelector(".chat-area");
-
-        function resizeHandler() {
-            app.style.height = window.visualViewport.height + "px";
-        }
-
-        window.visualViewport.addEventListener("resize", resizeHandler);
-    }
-}
-
-document.addEventListener("DOMContentLoaded", adjustForKeyboard);
