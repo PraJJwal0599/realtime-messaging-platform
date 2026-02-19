@@ -1,61 +1,86 @@
-🍻 Brewverse v1.0.0
+<h1 align="center">🍻 Brewverse v1.0.0</h1>
 
-Live Application:
-👉 https://brewverse.vercel.app
+<p align="center">
+Production-ready real-time messaging platform built with FastAPI, WebSockets, PostgreSQL & JWT
+</p>
 
-Brewverse is a production-ready real-time messaging platform built with FastAPI, Async SQLAlchemy, PostgreSQL (Supabase), JWT authentication, and WebSockets.
+<p align="center">
+  <a href="https://brewverse.vercel.app"><strong>🚀 Live Application</strong></a>
+</p>
 
-Version 1.0.0 introduces stable real-time conversation ordering, a dedicated notification socket, and production-grade unread tracking.
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.0.0-blue" />
+  <img src="https://img.shields.io/badge/backend-FastAPI-green" />
+  <img src="https://img.shields.io/badge/database-PostgreSQL-blue" />
+  <img src="https://img.shields.io/badge/realtime-WebSockets-orange" />
+  <img src="https://img.shields.io/badge/auth-JWT-red" />
+</p>
 
-⸻
+---
 
-🚀 Overview
+## 🚀 Overview
 
-The application allows authenticated users to:
-	•	Register and log in using JWT-based authentication
-	•	Create or access direct conversations
-	•	Send and receive messages in real time using WebSockets
-	•	Track unread messages dynamically
-	•	Display typing indicators
-	•	Persist conversation history in PostgreSQL
-	•	Automatically reorder conversations based on last activity
+Brewverse is a production-grade real-time messaging platform built from scratch using:
 
-The system follows production-oriented architecture principles including async database access, separation of concerns, stateless authentication, and database-driven state management.
+- **FastAPI (async backend)**
+- **Async SQLAlchemy**
+- **PostgreSQL (Supabase)**
+- **JWT authentication**
+- **WebSockets (dual socket architecture)**
+- **Vanilla JavaScript frontend**
 
-⸻
+Version **1.0.0** introduces stable conversation ordering, real-time notification sockets, and production-ready unread tracking.
 
-🔔 Real-Time Notification System (v1.0.0)
+---
 
-Brewverse includes a dedicated WebSocket channel for real-time notifications.
+## ✨ Features
 
-Features
-	•	Live unread count updates
-	•	Sidebar refresh without reload
-	•	Browser tab title updates on new messages
-	•	Custom in-app toast notifications
-	•	Conversation reordering based on last activity
+- 🔐 JWT-based stateless authentication  
+- 💬 Real-time messaging via WebSockets  
+- 🔔 Dedicated notification WebSocket channel  
+- 📊 Intelligent unread message tracking  
+- 📈 Automatic conversation reordering (database-driven)  
+- ⌨️ Typing indicators  
+- 📱 Mobile responsive UI  
+- 🌐 Production deployment (Vercel + Render + Supabase)  
 
-Notification WebSocket Endpoint
+---
 
-WS /ws/notifications
+## 🔔 Real-Time Notification System (v1.0.0)
 
+Brewverse includes a dedicated notification socket:
 
-⸻
+(WS /ws/notifications)
 
-📊 Intelligent Conversation Ordering (v1.0.0)
+### What It Handles
 
-Conversations are ordered using an updated_at timestamp that updates whenever a new message is sent.
+- Live unread count updates  
+- Sidebar refresh without reload  
+- Browser tab title updates  
+- Custom in-app toast notifications  
+- Cross-device synchronization  
 
-This ensures:
-	•	Most recent conversation appears at the top
-	•	Consistent ordering across refresh and devices
-	•	No frontend reordering hacks
-	•	Database-driven consistency
+Unread tracking is handled using `last_read_message_id` — avoiding expensive full-table scans.
 
-Ordering Logic
+---
 
+## 📊 Intelligent Conversation Ordering
+
+Conversations are ordered using an `updated_at` timestamp.
+
+Whenever a new message is sent:
+
+1. Message is persisted
+2. `updated_at` is updated in the `conversations` table
+3. Conversations automatically reorder across all clients
+
+Ordering logic:
+
+```python
 .order_by(Conversation.updated_at.desc())
+```
 
+No frontend hacks. Fully database-driven.
 
 ⸻
 
@@ -63,7 +88,7 @@ Ordering Logic
 
 High-Level Design
 
-Browser (Frontend - Vanilla JS)
+Browser (Vanilla JS)
         │
         ├── REST API (Auth, Conversations, Messages)
         ▼
@@ -77,37 +102,43 @@ PostgreSQL (Supabase)
         ▼
 Real-Time Broadcast per Conversation
 
-Architecture Diagram
 
+⸻
+
+🧩 Architecture Diagram
+
+<p align="center">
+  <img src="arch.png" width="750"/>
+</p>
+
+
+
+⸻
+
+⚡ Real-Time Message Flow
+
+Each conversation maintains its own WebSocket broadcast group:
+
+active_connections: Dict[int, List[WebSocket]]
+
+Message Lifecycle
+	1.	Client sends message via WebSocket
+	2.	Message is saved to PostgreSQL
+	3.	Conversation updated_at is updated
+	4.	Message broadcast to all active participants
+	5.	Notification socket updates unread state
+
+Typing indicators are broadcast-only events and are not persisted.
 
 ⸻
 
 🔐 Authentication
-	•	JWT-based stateless authentication
+	•	Stateless JWT authentication
 	•	Password hashing via Argon2
-	•	Protected REST and WebSocket endpoints
-	•	/auth/me endpoint for identity verification
+	•	Protected REST & WebSocket endpoints
+	•	/auth/me identity verification endpoint
 
-Stateless authentication enables horizontal scaling and API-first system design.
-
-⸻
-
-⚡ Real-Time Communication
-
-WebSockets maintain persistent connections per conversation.
-
-Each conversation maintains its own broadcast group:
-
-active_connections: Dict[int, List[WebSocket]]
-
-Message Flow
-	1.	Client sends message via WebSocket
-	2.	Message is persisted to PostgreSQL
-	3.	updated_at is updated in Conversations
-	4.	Backend broadcasts to all connected participants
-	5.	Notification socket updates unread counts
-
-Typing indicators are broadcast-only events and are not persisted.
+This allows horizontal scalability and clean API-first architecture.
 
 ⸻
 
@@ -140,8 +171,6 @@ Messages
 	•	content
 	•	created_at
 
-Unread tracking is implemented using last_read_message_id to avoid expensive full-table scans.
-
 ⸻
 
 📡 API Endpoints
@@ -168,54 +197,38 @@ WebSocket
 
 📈 Scalability Considerations
 	•	Stateless JWT authentication
-	•	Async database access for concurrency
+	•	Async DB access for concurrency
 	•	Conversation-scoped WebSocket groups
 	•	Message persistence before broadcast
-	•	Clear separation between routing, models, and business logic
+	•	Clean separation of routing, models, and business logic
 
-In a multi-instance deployment, the WebSocket layer can be extended using a message broker (e.g., Redis Pub/Sub) to synchronize events across instances.
-
-⸻
-
-🔎 Production Readiness
-
-The architecture supports:
-	•	Modular backend structure
-	•	Environment-aware initialization
-	•	Testable API endpoints
-	•	CI-based validation pipeline
-	•	Containerized deployment
-	•	Real-time consistency across sessions
+Future horizontal scaling can integrate Redis Pub/Sub for multi-instance synchronization.
 
 ⸻
 
 🧪 Testing
 
-Tests are implemented using pytest and httpx with ASGI transport.
+Tests use pytest with ASGI transport.
 
 Run locally:
 
 cd Backend
 python -m pytest
 
-A GitHub Actions workflow automatically runs tests on every push to main.
+CI pipeline runs automatically on every push to main.
 
 ⸻
 
 🐳 Docker Support
 
-Build the image:
+Build:
 
 cd Backend
 docker build -t brewverse_backend .
 
-Run the container:
+Run:
 
 docker run -p 8000:8000 brewverse_backend
-
-Then open:
-
-http://127.0.0.1:8000
 
 
 ⸻
@@ -230,16 +243,19 @@ source venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 
-Backend runs at:
+Backend:
 
 http://127.0.0.1:8000
+
+
+⸻
 
 Frontend
 
 cd Frontend
 python3 -m http.server 5500
 
-Then open:
+Open:
 
 http://localhost:5500
 
@@ -248,6 +264,12 @@ http://localhost:5500
 
 📌 Version
 
-Current stable release: v1.0.0
+Current Stable Release: v1.0.0
 
 ⸻
+
+👨‍💻 Author
+
+Prajjwal
+Full-stack backend-focused developer
+Built from scratch as a production-style system.
