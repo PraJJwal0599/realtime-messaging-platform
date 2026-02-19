@@ -736,8 +736,8 @@ function connectNotificationSocket() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const wsProtocol = API_URL.startsWith("https") ? "wss" : "ws";
-    const wsBase = API_URL.replace(/^http/, wsProtocol);
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsBase = `${wsProtocol}//${window.location.host}`;
 
     notificationSocket = new WebSocket(
         `${wsBase}/ws/notifications?token=${token}`
