@@ -74,18 +74,8 @@ Whenever a new message is sent:
 2. `updated_at` is updated in the `conversations` table
 3. Conversations automatically reorder across all clients
 
-Perfect 👍
-Here is your clean, premium, fully corrected copy-paste README section.
 
-No broken formatting.
-Proper headings.
-Vertical architecture.
-Correct image reference (arch.png).
-Proper Markdown separators.
-
-You can copy everything below directly into your README.md.
-
-⸻
+---
 
 
 ## 📊 Ordering Logic
@@ -96,12 +86,12 @@ You can copy everything below directly into your README.md.
 
 No frontend hacks. Fully database-driven.
 
-⸻
+---
 
 ## 🏗 Architecture
 
-High-Level Design
-
+### High-Level Design
+```
 Browser (Vanilla JS)
         │
         ├── REST API (Auth, Conversations, Messages)
@@ -115,9 +105,9 @@ PostgreSQL (Supabase)
         ├── WebSocket Layer
         ▼
 Real-Time Broadcast per Conversation
+```
 
-
-⸻
+---
 
 ## 🧩 Architecture Diagram
 
@@ -127,7 +117,7 @@ Real-Time Broadcast per Conversation
 
 
 
-⸻
+---
 
 ## ⚡ Real-Time Message Flow
 
@@ -135,7 +125,7 @@ Each conversation maintains its own WebSocket broadcast group:
 
 active_connections: Dict[int, List[WebSocket]]
 
-Message Lifecycle
+### Message Lifecycle
 	1.	Client sends message via WebSocket
 	2.	Message is saved to PostgreSQL
 	3.	Conversation updated_at is updated
@@ -144,7 +134,7 @@ Message Lifecycle
 
 Typing indicators are broadcast-only events and are not persisted.
 
-⸻
+---
 
 ## 🔐 Authentication
 	•	Stateless JWT authentication
@@ -158,7 +148,7 @@ This allows horizontal scalability and clean API-first architecture.
 
 ## 🗄 Database Schema
 
-Users
+### Users
 	•	id
 	•	email (unique)
 	•	username (unique)
@@ -166,48 +156,48 @@ Users
 	•	password_hash
 	•	created_at
 
-Conversations
+### Conversations
 	•	id
 	•	is_group
 	•	created_at
 	•	updated_at
 
-Conversation Participants
+### Conversation Participants
 	•	conversation_id
 	•	user_id
 	•	last_read_message_id
 	•	role
 
-Messages
+### Messages
 	•	id
 	•	conversation_id
 	•	sender_id
 	•	content
 	•	created_at
 
-⸻
+---
 
 ## 📡 API Endpoints
 
-Authentication
+### Authentication
 	•	POST /auth/signup
 	•	POST /auth/login
 	•	GET /auth/me
 
-Conversations
+### Conversations
 	•	GET /conversations/
 	•	POST /conversations/direct/{username}
 	•	POST /conversations/{conversation_id}/read
 
-Messages
+### Messages
 	•	GET /messages/{conversation_id}
 	•	POST /messages
 
-WebSocket
+### WebSocket
 	•	WS /ws/chat/{conversation_id}
 	•	WS /ws/notifications
 
-⸻
+---
 
 ## 📈 Scalability Considerations
 	•	Stateless JWT authentication
@@ -218,7 +208,7 @@ WebSocket
 
 Future horizontal scaling can integrate Redis Pub/Sub for multi-instance synchronization.
 
-⸻
+---
 
 ## 🧪 Testing
 
@@ -231,7 +221,7 @@ python -m pytest
 
 CI pipeline runs automatically on every push to main.
 
-⸻
+---
 
 ## 🐳 Docker Support
 
@@ -245,7 +235,7 @@ Run:
 docker run -p 8000:8000 brewverse_backend
 
 
-⸻
+---
 
 ## 🛠 Running Locally
 
@@ -262,7 +252,7 @@ Backend runs at:
 http://127.0.0.1:8000
 
 
-⸻
+---
 
 Frontend
 
@@ -274,16 +264,16 @@ Open:
 http://localhost:5500
 
 
-⸻
+---
 
 ## 📌 Version
 
 Current Stable Release: v1.0.0
 
-⸻
+---
 
 ## 👨‍💻 Author
 
 Prajjwal
 Data Scientist building scalable backend systems and real-time architectures
-Built from scratch as a production-style system.
+Built from scratch as a production style system.
