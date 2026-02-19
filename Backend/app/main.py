@@ -28,8 +28,9 @@ app = FastAPI(title = APP_NAME)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-         "http://localhost:5500",
+        "http://localhost:5500",
         "http://127.0.0.1:5500",
+        "https://brewverse.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -203,3 +204,4 @@ app.include_router(conversations_router)
 app.include_router(auth.router)
 
 app.include_router(notifications_router)
+
