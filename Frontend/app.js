@@ -237,8 +237,9 @@ async function openChat(conversationId, otherUser) {
         socket.close();
     }
 
-    const wsProtocol = API_URL.startsWith("https") ? "wss" : "ws";
-    const wsBase = API_URL.replace(/^http/, wsProtocol);
+    const wsBase = API_URL.startsWith("https://")
+    ? API_URL.replace("https://", "wss://")
+    : API_URL.replace("http://", "ws://");
 
     socket = new WebSocket(
         `${wsBase}/ws/chat/${conversationId}?token=${token}`
