@@ -89,7 +89,7 @@ async def list_conversations(
                 ConversationParticipant.user_id == current_user.id,
                 ConversationParticipant.left_at.is_(None),
             )
-            .order_by(Conversation.created_at.desc())
+            .order_by(Conversation.updated_at.desc())
         )
 
         conversations = result.scalars().all()

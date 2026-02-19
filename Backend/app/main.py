@@ -17,23 +17,26 @@ from app.core.config import JWT_SECRET, JWT_ALGORITHM
 from app.models.user import User
 from sqlalchemy import select
 import os
-
+from app.routes.notifications import router as notifications_router
+from app.models.conversation_participant import ConversationParticipant
+from app.routes.notifications import manager as notification_manager
+from app.models.conversation import Conversation
+from sqlalchemy import update
 
 app = FastAPI(title = APP_NAME)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5500",
+         "http://localhost:5500",
         "http://127.0.0.1:5500",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "https://brewverse.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 class ConnectionManager:
     def __init__(self):
@@ -64,7 +67,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-@app.websocket("/ws/{conversation_id}")
+@app.websocket("/ws/chat/{conversation_id}")
 async def websocket_endpoint(websocket: WebSocket, conversation_id: int):
 
     token = websocket.query_params.get("token")
@@ -129,6 +132,16 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: int):
                 )
 
                 session.add(message)
+                print("Updating conversation:", conversation_id)
+
+                await session.execute(
+                    update(Conversation)
+                    .where(Conversation.id == conversation_id)
+                    .values(updated_at=datetime.utcnow())
+                )
+                print("Update committed")
+
+                
                 await session.commit()
                 await session.refresh(message)
 
@@ -141,6 +154,30 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: int):
                         "sender_id": message.sender_id,
                         "content": message.content,
                         "created_at": str(message.created_at),
+                    }
+                )
+
+
+                # Find receiver(s)
+                result = await session.execute(
+                    select(ConversationParticipant.user_id)
+                    .where(
+                        ConversationParticipant.conversation_id == conversation_id,
+                        ConversationParticipant.user_id != user.id
+                    )
+                )
+
+                receivers = result.scalars().all()
+
+                print("Sending notification to:", receivers)
+
+                for receiver_id in receivers:
+                    await notification_manager.send_notification(
+                    receiver_id,
+                    {
+                        "type": "new_message",
+                        "conversation_id": conversation_id,
+                        "sender_name": user.display_name
                     }
                 )
 
@@ -164,3 +201,5 @@ app.include_router(messages_router)
 app.include_router(conversations_router)
 
 app.include_router(auth.router)
+
+app.include_router(notifications_router)

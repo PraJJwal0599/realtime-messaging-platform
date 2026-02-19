@@ -519,3 +519,24 @@ body {
     transform: translateY(0);
 }
 
+.unread-count {
+    display: inline-block;
+    font-size: 12px;        
+    font-weight: 600;
+    line-height: 1;         
+    padding: 2px 6px;
+    border-radius: 6px;     
+    background: var(--accent-soft);
+    color: var(--text-primary);
+    transition: transform 0.2s ease;
+}
+
+.unread-count.bump {
+    animation: brewPulse 0.35s ease;
+}
+
+@keyframes brewPulse {
+    0%   { transform: scale(1); box-shadow: 0 0 0 rgba(199,178,249,0); }
+    40%  { transform: scale(1.15); box-shadow: 0 0 10px rgba(199,178,249,0.6); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(199,178,249,0); }
+}

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from jose import jwt
+from jose import jwt, JWTError
+
 from app.core.config import (
     JWT_SECRET,
     JWT_ALGORITHM,
@@ -22,3 +23,14 @@ def create_access_token(data: dict) -> str:
     )
 
     return token
+
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(
+            token,
+            JWT_SECRET,
+            algorithms=[JWT_ALGORITHM]
+        )
+        return payload
+    except JWTError:
+        return None

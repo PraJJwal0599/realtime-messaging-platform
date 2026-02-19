@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import AsyncSessionLocal
@@ -8,6 +8,11 @@ from app.models.message import Message
 from app.models.conversation_participant import ConversationParticipant
 from app.models.user import User
 from app.schemas.message import MessageCreate
+
+from app.core.connection_manager import NotificationManager
+from app.models.conversation import Conversation
+
+from app.routes.notifications import manager
 
 router = APIRouter(prefix = "/messages", tags = ["messages"])
 
@@ -40,8 +45,41 @@ async def send_message(
         )
 
         session.add(message)
+
+        print("Updating conversation in REST:", message_in.conversation_id)
+
+        result = await session.execute(
+            update(Conversation)
+            .where(Conversation.id == message_in.conversation_id)
+            .values(updated_at=func.now())
+        )
+
+        print("Rows updated:", result.rowcount)
+
         await session.commit()
+        print("Committed update in REST")
+
         await session.refresh(message)
+
+        result = await session.execute(
+            select(ConversationParticipant).where(
+                ConversationParticipant.conversation_id == message.conversation_id,
+                ConversationParticipant.user_id != current_user.id,
+                ConversationParticipant.left_at.is_(None),
+            )
+        )
+
+        receiver_id = result.scalar_one_or_none()
+        
+        if receiver_id:
+            await manager.send_notification(
+                receiver_id,
+            {
+                "type": "new_message",
+                "conversation_id": message.conversation_id,
+                "sender_name": current_user.display_name
+            }
+        )
 
         return{
             "message_id": message.id,

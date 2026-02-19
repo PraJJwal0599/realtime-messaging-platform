@@ -8,6 +8,7 @@ let activeConversationId = null;
 const API_URL = "https://realtime-messaging-backend.onrender.com";
 //const API_URL = "http://127.0.0.1:8000";
 
+
 function scrollToBottomIfNear(box) {
     const threshold = 80; 
 
@@ -20,7 +21,10 @@ function scrollToBottomIfNear(box) {
 }
 
 async function login(){
-    console.log("login() called");
+    
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
 
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
@@ -81,8 +85,11 @@ async function loadChats() {
         li.innerHTML = `
             <div style="font-weight: bold;">${chat.other_user.display_name}</div>
             <div style="font-size: 12px; opacity: 0.7;">@${chat.other_user.username}</div>
-            <div class = "unread-count" style="font-size: 12px; color: green;">Unread: ${chat.unread_count || 0}</div>
+            <div style="font-size: 12px; color: green;">
+                Unread: <span class="unread-count">${chat.unread_count}</span>
+            </div>
         `;
+
         li.onclick = () => openChat(chat.conversation_id, chat.other_user);
         list.appendChild(li);
     });
@@ -97,6 +104,10 @@ if (window.location.pathname.includes("chat.html")) {
 async function openChat(conversationId, otherUser) {
 
     activeConversationId = conversationId;
+
+    currentConversationId = conversationId;
+    window.currentConversationId = Number(conversationId);
+    console.log("Active chat set to:", window.currentConversationId);
 
     const chatArea = document.querySelector(".chat-area");
 
@@ -195,9 +206,10 @@ async function openChat(conversationId, otherUser) {
         box.appendChild(div);
     });
 
-    box.scrollTop = box.scrollHeight;
 
     box.addEventListener("scroll", () => {
+
+        if (!currentConversationId) return;
 
         if (
             box.scrollTop <= 80 &&
@@ -225,7 +237,12 @@ async function openChat(conversationId, otherUser) {
         socket.close();
     }
 
-    socket = new WebSocket(`wss://realtime-messaging-backend.onrender.com/ws/${conversationId}?token=${token}`);
+    const wsProtocol = API_URL.startsWith("https") ? "wss" : "ws";
+    const wsBase = API_URL.replace(/^http/, wsProtocol);
+
+    socket = new WebSocket(
+        `${wsBase}/ws/chat/${conversationId}?token=${token}`
+    );
 
     socket.onopen = function() {
         console.log("WebSocket connected for conversation", conversationId);
@@ -242,14 +259,18 @@ async function openChat(conversationId, otherUser) {
         const box = document.getElementById("messages");
 
         if (msg.type === "typing" && msg.sender_id !== currentUserId) {
-            console.log("Typing condition passed!!")
             showTypingIndicator();
             return;
         }
 
-        if (msg.type === "message"){
+        if (msg.type === "message") {
 
-            if (conversationId == activeConversationId) {
+            const isActiveChat =
+                Number(window.currentConversationId) ===
+                Number(msg.conversation_id);
+
+            if (isActiveChat) {
+                markConversationAsRead(msg.conversation_id);
 
                 const div = document.createElement("div");
                 div.classList.add("message");
@@ -257,7 +278,7 @@ async function openChat(conversationId, otherUser) {
                 if (msg.sender_id === currentUserId) {
                     div.classList.add("my-message");
                 } else {
-                div.classList.add("other-message");
+                    div.classList.add("other-message");
                 }
 
                 const time = new Date(msg.created_at);
@@ -268,23 +289,27 @@ async function openChat(conversationId, otherUser) {
 
                 div.innerHTML = `
                     <div>${msg.content_at || msg.content}</div>
-                    <div class = "timestamp">${formattedTime}</div>
+                    <div class="timestamp">${formattedTime}</div>
                 `;
 
                 box.appendChild(div);
-
                 scrollToBottomIfNear(box);
+
             } else {
                 incrementUnread(msg.conversation_id);
-
-                showBrewToast("New message received 👀")
+                showBrewToast("New message received 👀");
                 triggerBrowserNotification("New message on Brewverse 🍻");
-            }  
-        };
+            }
+        }
     }
 }
 
 async function loadOlderMessages(beforeId) {
+
+    if (!currentConversationId) {
+    isLoadingOlder = false;
+    return;
+    }
 
     if (isLoadingOlder) return;
     isLoadingOlder = true;
@@ -587,6 +612,8 @@ function goBack() {
     }
 
     currentConversationId = null;
+    window.currentConversationId = null;
+
     showEmptyState();
 
     if (window.innerWidth <= 768) {
@@ -680,12 +707,16 @@ function incrementUnread(conversationId) {
 
     if (!chatItem) return;
 
-    const unreadE1 = chatItem.querySelector(".unread-count");
+    const unreadEl = chatItem.querySelector(".unread-count");
 
-    if (!unreadE1) return;
+    if (!unreadEl) return;
 
     let current = parseInt(unreadEl.innerText || "0");
     unreadEl.innerText = current + 1;
+
+    unreadEl.classList.remove("bump");
+    void unreadEl.offsetWidth; // force reflow
+    unreadEl.classList.add("bump");
 }
 
 function triggerBrowserNotification(text) {
@@ -699,10 +730,87 @@ function triggerBrowserNotification(text) {
     }
 }
 
+let notificationSocket = null;
+
+function connectNotificationSocket() {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const wsProtocol = API_URL.startsWith("https") ? "wss" : "ws";
+    const wsBase = API_URL.replace(/^http/, wsProtocol);
+
+    notificationSocket = new WebSocket(
+        `${wsBase}/ws/notifications?token=${token}`
+    );
+
+    notificationSocket.onopen = () => {
+        console.log("Notification socket connected");
+    };
+
+    notificationSocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        console.log("Notification received", data);
+        console.log("Current conversation:", window.currentConversationId);
+        console.log("Incoming conversation:", data.conversation_id);
+        console.log("Are equal?", Number(window.currentConversationId) === Number(data.conversation_id));
+
+        if (data.type === "new_message") {
+            loadChats();
+
+            if (Number(window.currentConversationId) !== Number(data.conversation_id)) {
+                showBrewToast(`New message from ${data.sender_name}`);
+            }
+
+            if (document.hidden) {
+                document.title = "🔥 New Message - Brewverse";
+            }
+        }
+    };
+
+    notificationSocket.onerror = (err) => {
+        console.error("Notification socket error:", err);
+    };
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+    connectNotificationSocket();
+});
 
-    if ("Notification" in window && Notification.permission !== "granted") {
-        Notification.requestPermission();
+const defaultTitle = "Brewverse";
+
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        document.title = defaultTitle;
     }
+});
 
+async function markConversationAsRead(conversationId) {
+    const token = localStorage.getItem("token");
+
+    await fetch(`${API_URL}/conversations/${conversationId}/read`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    });
+    
+    loadChats();
+
+    const chatItem = document.querySelector(
+        `[data-conversation-id="${conversationId}"]`
+    );
+
+    if (chatItem) {
+        const unreadEl = chatItem.querySelector(".unread-count");
+        if (unreadEl) {
+            unreadEl.innerText = "0";
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.location.pathname.includes("chat.html")) {
+        loadChats();
+        connectNotificationSocket();
+    }
 });
