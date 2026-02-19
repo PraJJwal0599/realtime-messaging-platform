@@ -74,7 +74,21 @@ Whenever a new message is sent:
 2. `updated_at` is updated in the `conversations` table
 3. Conversations automatically reorder across all clients
 
-Ordering logic:
+Perfect 👍
+Here is your clean, premium, fully corrected copy-paste README section.
+
+No broken formatting.
+Proper headings.
+Vertical architecture.
+Correct image reference (arch.png).
+Proper Markdown separators.
+
+You can copy everything below directly into your README.md.
+
+⸻
+
+
+## 📊 Ordering Logic
 
 ```python
 .order_by(Conversation.updated_at.desc())
@@ -84,7 +98,7 @@ No frontend hacks. Fully database-driven.
 
 ⸻
 
-🏗 Architecture
+## 🏗 Architecture
 
 High-Level Design
 
@@ -105,17 +119,17 @@ Real-Time Broadcast per Conversation
 
 ⸻
 
-🧩 Architecture Diagram
+## 🧩 Architecture Diagram
 
 <p align="center">
-  <img src="arch.png" width="750"/>
+  <img src="architecture.png" width="750"/>
 </p>
 
 
 
 ⸻
 
-⚡ Real-Time Message Flow
+## ⚡ Real-Time Message Flow
 
 Each conversation maintains its own WebSocket broadcast group:
 
@@ -125,14 +139,14 @@ Message Lifecycle
 	1.	Client sends message via WebSocket
 	2.	Message is saved to PostgreSQL
 	3.	Conversation updated_at is updated
-	4.	Message broadcast to all active participants
+	4.	Message is broadcast to all active participants
 	5.	Notification socket updates unread state
 
 Typing indicators are broadcast-only events and are not persisted.
 
 ⸻
 
-🔐 Authentication
+## 🔐 Authentication
 	•	Stateless JWT authentication
 	•	Password hashing via Argon2
 	•	Protected REST & WebSocket endpoints
@@ -142,7 +156,7 @@ This allows horizontal scalability and clean API-first architecture.
 
 ⸻
 
-🗄 Database Schema
+## 🗄 Database Schema
 
 Users
 	•	id
@@ -173,7 +187,7 @@ Messages
 
 ⸻
 
-📡 API Endpoints
+## 📡 API Endpoints
 
 Authentication
 	•	POST /auth/signup
@@ -195,7 +209,7 @@ WebSocket
 
 ⸻
 
-📈 Scalability Considerations
+## 📈 Scalability Considerations
 	•	Stateless JWT authentication
 	•	Async DB access for concurrency
 	•	Conversation-scoped WebSocket groups
@@ -206,7 +220,7 @@ Future horizontal scaling can integrate Redis Pub/Sub for multi-instance synchro
 
 ⸻
 
-🧪 Testing
+## 🧪 Testing
 
 Tests use pytest with ASGI transport.
 
@@ -219,7 +233,7 @@ CI pipeline runs automatically on every push to main.
 
 ⸻
 
-🐳 Docker Support
+## 🐳 Docker Support
 
 Build:
 
@@ -233,7 +247,7 @@ docker run -p 8000:8000 brewverse_backend
 
 ⸻
 
-🛠 Running Locally
+## 🛠 Running Locally
 
 Backend
 
@@ -243,7 +257,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 
-Backend:
+Backend runs at:
 
 http://127.0.0.1:8000
 
@@ -262,14 +276,14 @@ http://localhost:5500
 
 ⸻
 
-📌 Version
+## 📌 Version
 
 Current Stable Release: v1.0.0
 
 ⸻
 
-👨‍💻 Author
+## 👨‍💻 Author
 
 Prajjwal
-Full-stack backend-focused developer
+Data Scientist building scalable backend systems and real-time architectures
 Built from scratch as a production-style system.
