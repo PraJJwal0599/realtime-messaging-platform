@@ -202,24 +202,30 @@ body {
 }
 
 .auth-body {
-  background: linear-gradient(135deg, #f5f7fa, #e4e8f0);
+  margin: 0;
+  min-height: 100vh;
+  background: #f5f3ff;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .auth-container {
   width: 100%;
   max-width: 400px;
+  padding: 20px;
 }
 
 .auth-card {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  text-align: center;
+    max-width: 420px;
+    margin: auto;
+    padding: 40px 35px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
+    text-align: center;
 }
 
 .auth-card h2 {
@@ -234,27 +240,30 @@ body {
   border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 14px;
+  outline: none;
+  transition: 0.2s ease;
 }
 
 .auth-card input:focus {
-  outline: none;
-  border-color: var(--accent);
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
 }
 
 .auth-card button {
   width: 100%;
-  padding: 12px;
-  background: var(--accent);
-  color: #2a2440;
+  padding: 14px;
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: 0.2s ease;
 }
 
 .auth-card button:hover {
-  background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
 }
 
 .auth-switch {
@@ -263,8 +272,13 @@ body {
 }
 
 .auth-switch a {
-  color: var(--accent);
-  text-decoration: none;
+    color: #8b5cf6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
 }
 
 .error {
@@ -539,4 +553,23 @@ body {
     0%   { transform: scale(1); box-shadow: 0 0 0 rgba(199,178,249,0); }
     40%  { transform: scale(1.15); box-shadow: 0 0 10px rgba(199,178,249,0.6); }
     100% { transform: scale(1); box-shadow: 0 0 0 rgba(199,178,249,0); }
+}
+
+.brand-title {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+}
+
+.brand-underline {
+    width: 120px;
+    height: 4px;
+    margin: 10px auto 22px auto;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #a78bfa, #f472b6);
 }
