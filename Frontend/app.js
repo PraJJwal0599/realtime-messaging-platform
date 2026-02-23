@@ -103,6 +103,10 @@ if (window.location.pathname.includes("chat.html")) {
 
 async function openChat(conversationId, otherUser) {
 
+    if (!other_user) {
+    console.error("openChat called without user data");
+    return;
+}
     activeConversationId = conversationId;
 
     currentConversationId = conversationId;
@@ -519,7 +523,7 @@ async function signup() {
 
     // Auto-login after successful signup
     const loginRes = await fetch(
-        `${API_URL}/auth/login?email=${email}&password=${password}`,
+        `${API_URL}/auth/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
         { method: "POST" }
     );
 
@@ -542,7 +546,7 @@ async function signup() {
         localStorage.setItem("user_id", meData.id);
     }
 
-    window.location.href = "index.html";
+    window.location.href = "chat.html";
 }
 
 async function startNewChat() {
@@ -574,8 +578,10 @@ async function startNewChat() {
 
     const data = await res.json();
 
-    loadChats();
-    openChat(data.conversation_id);
+    
+    await loadChats();
+
+    openChat(data.conversation_id, data.other_user);
 
     document.getElementById("newChatUsername").value = "";
 }

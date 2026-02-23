@@ -54,8 +54,15 @@ async def create_or_get_direct_conversation(
         conversation = result.scalar_one_or_none()
 
         if conversation:
-            return {"conversation_id": conversation.id}
-        
+            return {
+                "conversation_id": conversation.id,
+                "other_user": {
+                    "id": target_user.id,
+                    "username": target_user.username,
+                    "display_name": target_user.display_name,
+                }
+            }
+
         conversation = Conversation(is_group = False)
         session.add(conversation)
         await session.flush()
@@ -75,7 +82,14 @@ async def create_or_get_direct_conversation(
 
         await session.commit()
         
-        return {"conversation_id": conversation.id}
+        return {
+            "conversation_id": conversation.id,
+            "other_user": {
+                "id": target_user.id,
+                "username": target_user.username,
+                "display_name": target_user.display_name,
+            }
+        }
     
 @router.get("")
 async def list_conversations(
