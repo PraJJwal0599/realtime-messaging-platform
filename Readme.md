@@ -1,4 +1,4 @@
-<h1 align="center">🍻 Brewverse v1.0.1</h1>
+<h1 align="center">🍻 Brewverse v1.0.2</h1>
 
 <p align="center">
 Production-ready real-time messaging platform built with FastAPI, WebSockets, PostgreSQL & JWT
