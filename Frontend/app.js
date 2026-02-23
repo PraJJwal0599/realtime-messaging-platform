@@ -103,7 +103,7 @@ if (window.location.pathname.includes("chat.html")) {
 
 async function openChat(conversationId, otherUser) {
 
-    if (!other_user) {
+    if (!otherUser) {
     console.error("openChat called without user data");
     return;
 }
